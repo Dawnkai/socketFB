@@ -46,7 +46,7 @@ class Client:
             print ("No path specified for GET, returning...")
             return
         
-        self.server.send(bytes(f"GET {path}", "utf-8"))
+        self.server.send(bytes(f"{path} GET", "utf-8"))
 
         response = ""
 
@@ -83,7 +83,7 @@ class Client:
             print("Data in incorrect format, returning...")
             return
         
-        self.server.send(bytes(f"POST {path}\n{data}", "utf-8"))
+        self.server.send(bytes(f"{path} POST {data}", "utf-8"))
     
 
     def put(self, path = None, data = None):
@@ -110,4 +110,4 @@ class Client:
             print("Data in incorrect format, returning...")
             return
         
-        self.server.send(bytes(f"PUT {path}\n{data}", "utf-8"))
+        self.server.send(bytes(f"{path} PUT {data}", "utf-8"))

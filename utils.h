@@ -13,12 +13,13 @@
 #include <sys/socket.h>
 
 #include <netinet/in.h>
+#include <sqlite3.h>
 
 
 // Handles new client connection.
 void* handleClient(void *args);
-// Parses the request from the client.
-void parseRequest(char request[], char endpoint[]);
+// Parses the request from the client and returns response.
+void parseRequest(char request[], char endpoint[], int client);
 // Parses GET requests.
 char* get(char request[], char endpoint[]);
 // Parses POST requests.
@@ -35,5 +36,9 @@ char* getFriends(char params[]);
 char* getMessages(char params[]);
 // Sends message from client to another user.
 char* sendMessage(char params[]);
+// Create table in the SQLite database
+void createDatabase(char dbname[]);
+// Executes SQL query on database dbname
+void executeSQL(char dbname[], char query[]);
 
 #endif

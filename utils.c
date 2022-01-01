@@ -7,15 +7,43 @@
     data sent by client.
 */
 void* handleClient(void *arg) {
-    char request[1024];
+    /*
+        We assume no request is longer than 4096 characters, otherwise
+        we would need to expand memory infinitely using realloc, which is
+        potentially unsafe.
+    */ 
+    char request[4096];
+    // No endpoint should be longer than 1024 characters
+    char endpoint[1024];
+    char data[4096];
     printf("New client connected! \n");
     int client = *((int *)arg);
     int msg_status;
+    int i = 0;
+    int j;
+    // Infinite loop
     for(;;) {
-        msg_status=recv(client, request, 1024, 0);
-        while (!(msg_status<1)) {
-            // TODO: Fetch messages from client and merge them
+        // FIXME: Potential lack of break conditions
+        msg_status=recv(client, request, 4096, 0);
+        if (msg_status != -1) {
+            // Copy endpoint to another char array
+            while (request[i] != " ") {
+                endpoint[i] = request[i];
+                i++;
+            }
+            // If endpoint is not specified, ignore the request
+            if (strlen(endpoint) != 0) {
+                // Copy rest of the data to separate buffer
+                for(j = i + 1; j < strlen(request); j++) data[j - (i + 1)] = request[j];
+                parseRequest(data, endpoint, client);
+            }
+            // Reset variables before another request
+            endpoint[0] = "\0";
+            data[0] = "\0";
+            i = 0;
+            j = 0;
         }
+        else break;
     }
     printf("Client disconnected! \n");
     pthread_exit(NULL);
@@ -24,40 +52,32 @@ void* handleClient(void *arg) {
 
 /*
     Extracts type of request sent by user (GET, POST, PUT) on specific endpoint
-    and calls appropriate functions with their respective arguments.
+    and calls appropriate functions with their respective arguments, then returns requested
+    data to the client.
 */
-void parseRequest(char request[], char endpoint[]) {
-    if (strlen(request) < 3) {
-        // TODO: Return 401 : Bad Request
-        return;
-    }
-
+void parseRequest(char request[], char endpoint[], int client) {
     char *pos;
-    char *data;
+    char data[4096];
     char *response;
     int i;
-    if (strstr(request, "GET")) {
-        data = (char*)malloc(strlen(request) - 3);
+
+
+    if (strlen(request) < 3) strcpy(response, "401 : Bad Request");
+    else if (strstr(request, "GET")) {
         for (i = 3; i < strlen(request); i++) data[i-3] = request[i];
         response = get(data, endpoint);
-        // TODO: Return response
     }
     else if (strstr(request, "POST")) {
-        data = (char*)malloc(strlen(request) - 4);
         for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
         response = post(data, endpoint);
-        // TODO: Return response
     }
     else if (strstr(request, "PUT")) {
-        data = (char*)malloc(strlen(request) - 3);
         for (i = 3; i < strlen(request); i++) data[i-3] = request[i];
         response = put(data, endpoint);
-        // TODO: Return response
     }
-    else {
-        // TODO: Return 401 : Bad Request
-        return;
-    }
+    else strcpy(response, "401: Incorrect method.");
+
+    send(client, response, strlen(response), 0);
 }
 
 
@@ -137,4 +157,65 @@ char* getMessages(char params[]) {
 */
 char* sendMessage(char params[]) {
     return "";
+}
+
+
+/*
+    Get database of dbname.
+*/
+sqlite3 *getDatabase(char dbname[]) {
+    sqlite3 *db;
+    int rc;
+
+    rc = sqlite3_open("test.db", &db);
+    if (rc) {
+        printf("Can't open the database!\n");
+    }
+    printf("Database opened.\n");
+    
+    return db;
+}
+
+
+/*
+    Creates database in SQLite database of name dbname if it doesn't exist already.
+*/
+void createDatabase(char dbname[]) {
+    sqlite3 *db = getDatabase(dbname);
+    sqlite3_close(db);
+}
+
+
+/*
+    Callback for all SQL statement executions.
+*/
+static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
+    int i = 0;
+    for (i = 0; i < argc; i++) {
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+    return 0;
+}
+
+
+/*
+    Executes SQL query on database dbname.
+*/
+void executeSQL(char dbname[], char query[]) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char *sql;
+
+    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+        printf("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+    else {
+        printf("Table created successfully\n");
+    }
+    sqlite3_close(db);
 }

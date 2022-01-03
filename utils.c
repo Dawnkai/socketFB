@@ -23,7 +23,6 @@ void* handleClient(void *arg) {
     int j;
     // Infinite loop
     for(;;) {
-        // FIXME: Potential lack of break conditions
         msg_status=recv(client, request, 4096, 0);
         if (msg_status >= 1) {
             // Copy endpoint to another char array
@@ -33,6 +32,7 @@ void* handleClient(void *arg) {
             }
             // If endpoint is not specified, ignore the request
             if (strlen(endpoint) != 0) {
+                endpoint[i] = '\0';
                 // Copy rest of the data to separate buffer
                 for(j = i + 1; j < strlen(request); j++) data[j - (i + 1)] = request[j];
                 parseRequest(data, endpoint, client);
@@ -59,6 +59,7 @@ void parseRequest(char request[], char endpoint[], int client) {
     char data[4096];
     char *response = (char*)malloc(4096);
     int i;
+    printf("Called endpoint %s\n", endpoint);
 
 
     if (strlen(request) < 3) strcpy(response, "401 : Bad Request");
@@ -103,7 +104,7 @@ char* post(char request[], char endpoint[]) {
     char *response = (char*)malloc(4096);
     if (strcmp(endpoint, "login") == 0) login(request, response);
     else if (strcmp(endpoint, "send") == 0) sendMessage(request);
-    else if (strcmp(endpoint, "signup") == 0) signup(request);
+    else if (strcmp(endpoint, "signup") == 0) signup(request, response);
     else strcpy(response, "404: Endpoint doesn't exist.");
     return response;
 }
@@ -130,7 +131,7 @@ void login(char credentials[], char *response) {
        Otherwise strcat throws stack smashing error */
     char *query = (char*)malloc(100 + strlen(res.username) + strlen(res.password));
     // Create SQL query
-    strcat(query, "SELECT * FROM users WHERE username = '");
+    strcpy(query, "SELECT * FROM users WHERE username = '");
     strcat(query, res.username);
     strcat(query, "' AND password = '");
     strcat(query, res.password);
@@ -147,8 +148,25 @@ void login(char credentials[], char *response) {
     Creates new user in the database with specified credentials
     if he/she doesn't exist already.
 */
-char* signup(char credentials[]) {
-    return "";
+void signup(char credentials[], char *response) {
+    struct Credentials res = getCredentials(credentials);
+    /* Allocate memory for base SQL query + size of credentials
+       Otherwise strcat throws stack smashing error */
+    char *query = (char*)malloc(100 + strlen(res.username) + strlen(res.password));
+    // Check if user exists first
+    strcpy(query, "SELECT * FROM users WHERE username = '");
+    strcat(query, res.username);
+    strcat(query, "' AND password = '");
+    strcat(query, res.password);
+    strcat(query, "';");
+    if (userExists(DBNAME, query)) {
+        strcpy(response, "403 : User already exists.");
+    }
+    else {
+        // Create new user
+        if (createUser(DBNAME, res.username, res.password)) strcpy(response, "201 : User created.");
+        else strcpy(response, "500 : Internal server error.");
+    }
 }
 
 

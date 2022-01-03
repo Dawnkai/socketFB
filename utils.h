@@ -15,6 +15,11 @@
 #include <netinet/in.h>
 #include <sqlite3.h>
 
+#include "parser.h"
+#include "database.h"
+
+#define DBNAME "data.db"
+
 
 // Handles new client connection.
 void* handleClient(void *args);
@@ -27,18 +32,14 @@ char* post(char request[], char endpoint[]);
 // Parses PUT requests.
 char* put(char request[], char endpoint[]);
 // Checks if the user exists in the database and logs him/her in.
-char* login(char credentials[]);
+void login(char credentials[], char *response);
 // Creates new account for the user if it doesn't exist.
-char* signup(char credentials[]);
+void signup(char credentials[], char *response);
 // Fetches friends of client.
 char* getFriends(char params[]);
 // Gets messages from user to client.
 char* getMessages(char params[]);
 // Sends message from client to another user.
 char* sendMessage(char params[]);
-// Create table in the SQLite database
-void createDatabase(char dbname[]);
-// Executes SQL query on database dbname
-void executeSQL(char dbname[], char query[]);
 
 #endif

@@ -23,23 +23,23 @@ void* handleClient(void *arg) {
     int j;
     // Infinite loop
     for(;;) {
-        // FIXME: Potential lack of break conditions
         msg_status=recv(client, request, 4096, 0);
-        if (msg_status != -1) {
+        if (msg_status >= 1) {
             // Copy endpoint to another char array
-            while (request[i] != " ") {
+            while (request[i] != ' ') {
                 endpoint[i] = request[i];
                 i++;
             }
             // If endpoint is not specified, ignore the request
             if (strlen(endpoint) != 0) {
+                endpoint[i] = '\0';
                 // Copy rest of the data to separate buffer
                 for(j = i + 1; j < strlen(request); j++) data[j - (i + 1)] = request[j];
                 parseRequest(data, endpoint, client);
             }
             // Reset variables before another request
-            endpoint[0] = "\0";
-            data[0] = "\0";
+            endpoint[0] = '\0';
+            data[0] = '\0';
             i = 0;
             j = 0;
         }
@@ -56,28 +56,31 @@ void* handleClient(void *arg) {
     data to the client.
 */
 void parseRequest(char request[], char endpoint[], int client) {
-    char *pos;
     char data[4096];
-    char *response;
+    char *response = (char*)malloc(4096);
     int i;
+    printf("Called endpoint %s\n", endpoint);
 
 
     if (strlen(request) < 3) strcpy(response, "401 : Bad Request");
     else if (strstr(request, "GET")) {
-        for (i = 3; i < strlen(request); i++) data[i-3] = request[i];
+        for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
         response = get(data, endpoint);
     }
     else if (strstr(request, "POST")) {
-        for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
+        for (i = 5; i < strlen(request); i++) data[i-5] = request[i];
         response = post(data, endpoint);
     }
     else if (strstr(request, "PUT")) {
-        for (i = 3; i < strlen(request); i++) data[i-3] = request[i];
+        for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
         response = put(data, endpoint);
     }
     else strcpy(response, "401: Incorrect method.");
 
+    printf("response is: %s\n", response);
+
     send(client, response, strlen(response), 0);
+    free(response);
 }
 
 
@@ -98,11 +101,12 @@ char* get(char request[], char endpoint[]) {
     based on the endpoint the request as sent to.
 */
 char* post(char request[], char endpoint[]) {
-    if (strcmp(endpoint, "login") == 0) return login(request);
-    else if (strcmp(endpoint, "send") == 0) return sendMessage(request);
-    else if (strcmp(endpoint, "signup") == 0) return signup(request);
-    // TODO: Return 404 : Not Found
-    return "404: Endpoint doesn't exist.";
+    char *response = (char*)malloc(4096);
+    if (strcmp(endpoint, "login") == 0) login(request, response);
+    else if (strcmp(endpoint, "send") == 0) sendMessage(request);
+    else if (strcmp(endpoint, "signup") == 0) signup(request, response);
+    else strcpy(response, "404: Endpoint doesn't exist.");
+    return response;
 }
 
 
@@ -119,9 +123,24 @@ char* put(char request[], char endpoint[]) {
 /*
     Checks the database if user with specified credentials
     exists (and then logs the user in) or not (and then returns an error).
+    Overwrites response attribute.
 */
-char* login(char credentials[]) {
-    return "";
+void login(char credentials[], char *response) {
+    struct Credentials res = getCredentials(credentials);
+    /* Allocate memory for base SQL query + size of credentials
+       Otherwise strcat throws stack smashing error */
+    char *query = (char*)malloc(100 + strlen(res.username) + strlen(res.password));
+    // Create SQL query
+    strcpy(query, "SELECT * FROM users WHERE username = '");
+    strcat(query, res.username);
+    strcat(query, "' AND password = '");
+    strcat(query, res.password);
+    strcat(query, "';");
+    if (userExists(DBNAME, query)) {
+        strcpy(response, "200 : Logged in.");
+    }
+    else strcpy(response, "403 : Credentials incorrect.");
+    free(query);
 }
 
 
@@ -129,8 +148,25 @@ char* login(char credentials[]) {
     Creates new user in the database with specified credentials
     if he/she doesn't exist already.
 */
-char* signup(char credentials[]) {
-    return "";
+void signup(char credentials[], char *response) {
+    struct Credentials res = getCredentials(credentials);
+    /* Allocate memory for base SQL query + size of credentials
+       Otherwise strcat throws stack smashing error */
+    char *query = (char*)malloc(100 + strlen(res.username) + strlen(res.password));
+    // Check if user exists first
+    strcpy(query, "SELECT * FROM users WHERE username = '");
+    strcat(query, res.username);
+    strcat(query, "' AND password = '");
+    strcat(query, res.password);
+    strcat(query, "';");
+    if (userExists(DBNAME, query)) {
+        strcpy(response, "403 : User already exists.");
+    }
+    else {
+        // Create new user
+        if (createUser(DBNAME, res.username, res.password)) strcpy(response, "201 : User created.");
+        else strcpy(response, "500 : Internal server error.");
+    }
 }
 
 
@@ -157,65 +193,4 @@ char* getMessages(char params[]) {
 */
 char* sendMessage(char params[]) {
     return "";
-}
-
-
-/*
-    Get database of dbname.
-*/
-sqlite3 *getDatabase(char dbname[]) {
-    sqlite3 *db;
-    int rc;
-
-    rc = sqlite3_open("test.db", &db);
-    if (rc) {
-        printf("Can't open the database!\n");
-    }
-    printf("Database opened.\n");
-    
-    return db;
-}
-
-
-/*
-    Creates database in SQLite database of name dbname if it doesn't exist already.
-*/
-void createDatabase(char dbname[]) {
-    sqlite3 *db = getDatabase(dbname);
-    sqlite3_close(db);
-}
-
-
-/*
-    Callback for all SQL statement executions.
-*/
-static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
-    int i = 0;
-    for (i = 0; i < argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
-
-
-/*
-    Executes SQL query on database dbname.
-*/
-void executeSQL(char dbname[], char query[]) {
-    sqlite3 *db = getDatabase(dbname);
-    char *zErrMsg = 0;
-    int rc;
-    char *sql;
-
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-
-    if( rc != SQLITE_OK ){
-        printf("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-    else {
-        printf("Table created successfully\n");
-    }
-    sqlite3_close(db);
 }

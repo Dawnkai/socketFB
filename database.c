@@ -56,3 +56,33 @@ bool userExists(char dbname[], char query[]) {
     free(resp);
     return exists;
 }
+
+
+/*
+    Creates new user in database using provided username
+    and password. Returns 1 if successful or 0 if there was
+    and error.
+*/
+bool createUser(char dbname[], char username[], char password[]) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    bool created = true;
+    char query[100 + strlen(username) + strlen(password)];
+    
+    strcpy(query, "INSERT INTO users (username, password) VALUES ('");
+    strcat(query, username);
+    strcat(query, "', '");
+    strcat(query, password);
+    strcat(query, "');");
+
+    rc = sqlite3_exec(db, query, 0, 0, &zErrMsg);
+
+    if (rc != SQLITE_OK) {
+        printf("SQL error while creating new user: %s\n", zErrMsg);
+        created = false;
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+    return created;
+}

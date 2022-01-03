@@ -37,6 +37,8 @@ int main() {
     configureServer(&server_socket, &server_config, 1100);
     startServer(server_socket, server_config);
 
+    printf("Up and running!\n");
+
     // Process all connections to the socket
     while(1) {
         client_socket = accept(server_socket, (struct sockaddr *) &server_storage, &addr_size);

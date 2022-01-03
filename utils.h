@@ -34,7 +34,7 @@ char* put(char request[], char endpoint[]);
 // Checks if the user exists in the database and logs him/her in.
 void login(char credentials[], char *response);
 // Creates new account for the user if it doesn't exist.
-char* signup(char credentials[]);
+void signup(char credentials[], char *response);
 // Fetches friends of client.
 char* getFriends(char params[]);
 // Gets messages from user to client.

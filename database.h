@@ -17,5 +17,7 @@
 sqlite3 *getDatabase(char dbname[]);
 // Checks if user exists using query
 bool userExists(char dbname[], char query[]);
+// Create new user using credentials
+bool createUser(char dbname[], char username[], char password[]);
 
 #endif

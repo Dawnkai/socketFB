@@ -40,6 +40,6 @@ void getFriends(char params[], char *response);
 // Gets messages from user to client.
 char* getMessages(char params[]);
 // Sends message from client to another user.
-char* sendMessage(char params[]);
+void sendMessage(char params[], char *response);
 
 #endif

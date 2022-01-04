@@ -5,8 +5,16 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <pthread.h>
 
 #include <sqlite3.h>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include <netinet/in.h>
 
 #define bool int
 #define true 1
@@ -25,5 +33,7 @@ bool createUser(char dbname[], char username[], char password[]);
 void fetchFriends(char dbname[], char user[], char *response);
 // Add message from sender to receiver to database
 void addMessage(char dbname[], char sender[], char receiver[], char content[]);
+// Fetch messages between users
+void fetchMessages(char dbname[], char sender[], char receiver[], int client);
 
 #endif

@@ -65,15 +65,11 @@ void parseRequest(char request[], char endpoint[], int client) {
     if (strlen(request) < 3) strcpy(response, "401 : Bad Request");
     else if (strstr(request, "GET")) {
         for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
-        response = get(data, endpoint);
+        response = get(data, endpoint, client);
     }
     else if (strstr(request, "POST")) {
         for (i = 5; i < strlen(request); i++) data[i-5] = request[i];
         response = post(data, endpoint);
-    }
-    else if (strstr(request, "PUT")) {
-        for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
-        response = put(data, endpoint);
     }
     else strcpy(response, "401: Incorrect method.");
 
@@ -88,11 +84,12 @@ void parseRequest(char request[], char endpoint[], int client) {
     Processes GET requests by calling required functions
     based on the endpoint the request was sent to.
 */
-char* get(char request[], char endpoint[]) {
-    if (strcmp(endpoint, "friends") == 0) return getFriends(request);
-    else if (strcmp(endpoint, "messages") == 0) return getMessages(request);
-    // TODO: Return 404 : Not Found
-    return "404: Endpoint doesn't exist.";
+char* get(char request[], char endpoint[], int client) {
+    char *response = (char*)malloc(4096);
+    if (strcmp(endpoint, "friends") == 0) getFriends(request, response);
+    else if (strcmp(endpoint, "messages") == 0) getMessages(request, response, client);
+    else strcpy(response, "404: Endpoint doesn't exist.");
+    return response;
 }
 
 
@@ -103,7 +100,7 @@ char* get(char request[], char endpoint[]) {
 char* post(char request[], char endpoint[]) {
     char *response = (char*)malloc(4096);
     if (strcmp(endpoint, "login") == 0) login(request, response);
-    else if (strcmp(endpoint, "send") == 0) sendMessage(request);
+    else if (strcmp(endpoint, "send") == 0) sendMessage(request, response);
     else if (strcmp(endpoint, "signup") == 0) signup(request, response);
     else strcpy(response, "404: Endpoint doesn't exist.");
     return response;
@@ -111,55 +108,32 @@ char* post(char request[], char endpoint[]) {
 
 
 /*
-    Processes PUT requests by calling required functions
-    based on the endpoint the request as sent to.
-*/
-char* put(char request[], char endpoint[]) {
-    // TODO: If nothing will require update on server, remove this
-    return "";
-}
-
-
-/*
     Checks the database if user with specified credentials
     exists (and then logs the user in) or not (and then returns an error).
     Overwrites response attribute.
+
+    Credentials should be in form:
+    {'username':'user','password':'pass'}
 */
 void login(char credentials[], char *response) {
     struct Credentials res = getCredentials(credentials);
-    /* Allocate memory for base SQL query + size of credentials
-       Otherwise strcat throws stack smashing error */
-    char *query = (char*)malloc(100 + strlen(res.username) + strlen(res.password));
-    // Create SQL query
-    strcpy(query, "SELECT * FROM users WHERE username = '");
-    strcat(query, res.username);
-    strcat(query, "' AND password = '");
-    strcat(query, res.password);
-    strcat(query, "';");
-    if (userExists(DBNAME, query)) {
+    if (authenticate(DBNAME, res.username, res.password)) {
         strcpy(response, "200 : Logged in.");
     }
     else strcpy(response, "403 : Credentials incorrect.");
-    free(query);
 }
 
 
 /*
     Creates new user in the database with specified credentials
     if he/she doesn't exist already.
+
+    Credentials should be in form:
+    {'username':'user','password':'pass'}
 */
 void signup(char credentials[], char *response) {
     struct Credentials res = getCredentials(credentials);
-    /* Allocate memory for base SQL query + size of credentials
-       Otherwise strcat throws stack smashing error */
-    char *query = (char*)malloc(100 + strlen(res.username) + strlen(res.password));
-    // Check if user exists first
-    strcpy(query, "SELECT * FROM users WHERE username = '");
-    strcat(query, res.username);
-    strcat(query, "' AND password = '");
-    strcat(query, res.password);
-    strcat(query, "';");
-    if (userExists(DBNAME, query)) {
+    if (userExists(DBNAME, res.username)) {
         strcpy(response, "403 : User already exists.");
     }
     else {
@@ -173,24 +147,56 @@ void signup(char credentials[], char *response) {
 /*
     Fetches friends of the specified user (if he/she exists) and 
     returns them based on the params.
+
+    Params should be in form:
+    {'username': 'nameoftheuser'}
 */
-char* getFriends(char params[]) {
-    return "";
+void getFriends(char params[], char *response) {
+    // Substring extraction for checking if params can be extracted
+    char tmp[4096] = "";
+    int i;
+    for(i = 2; i < 12; i++) tmp[i-2] = params[i];
+    if (strcmp(tmp, "username\":") == 0) {
+        getUser(params, tmp);
+        fetchFriends(DBNAME, tmp, response);
+    }
+    else strcpy(response, "");
 }
 
 
 /*
     Fetches messages sent from specific user to another user specified
-    in params attribute and returns them.
+    in params attribute and returns them BULK BY BULK. It means that
+    this function will not return one response, but instead will keep sending
+    all messages until all of them are sent!
+    Final message is 200 : Messages received.
+    The reason for this is because messages between users can be very long
+    vastly exceeding 4096 letters limit.
+
+    Params should be in form:
+    {'sender':'user','receiver':'other_user'}
 */
-char* getMessages(char params[]) {
-    return "";
+void getMessages(char params[], char *response, int client) {
+    struct Message participants = getParticipants(params);
+    if (userExists(DBNAME, participants.sender) && userExists(DBNAME, participants.receiver)) {
+        fetchMessages(DBNAME, participants.sender, participants.receiver, client);
+        strcpy(response, "200 : Messages received.");
+    }
+    else strcpy(response, "404 : Users do not exist.");
 }
 
 
 /*
     Sends a message to specific user (if he/she exists).
+
+    Params should be in form:
+    {'sender':'user','receiver':'other_user','content':'something'}
 */
-char* sendMessage(char params[]) {
-    return "";
+void sendMessage(char params[], char *response) {
+    struct Message msg = getMessage(params);
+    if (userExists(DBNAME, msg.sender) && userExists(DBNAME, msg.receiver)) {
+        addMessage(DBNAME, msg.sender, msg.receiver, msg.content);
+        strcpy(response, "200 : Message sent.");
+    }
+    else strcpy(response, "403 : Incorrect message.");
 }

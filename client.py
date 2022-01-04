@@ -1,4 +1,12 @@
+"""
+Example script for sending data to server.
+By no means is it complete client API and 
+does not have all functionality (i.e. fetching all messages).
+For testing purposes only.
+"""
+
 import socket
+import json
 
 
 class Client:
@@ -28,7 +36,7 @@ class Client:
         self.server.close()
     
 
-    def get(self, path = None):
+    def get(self, path = None, data = None):
         '''
         Standard GET method returning data from server.
 
@@ -46,17 +54,11 @@ class Client:
             print ("No path specified for GET, returning...")
             return
         
-        self.server.send(bytes(f"{path} GET", "utf-8"))
-
-        response = ""
-
-        while True:
-            chunk = self.server.recv(1024)
-            if (len(chunk) <= 0):
-                break
-            response += chunk.decode("utf-8")
-
-        return response
+        if not isinstance(data, str) and data is not None:
+            print("Data in incorrect format, returning...")
+            return
+        
+        self.server.send(bytes(f"{path} GET {data}", "utf-8"))
     
 
     def post(self, path = None, data = None):
@@ -86,28 +88,24 @@ class Client:
         self.server.send(bytes(f"{path} POST {data}", "utf-8"))
     
 
-    def put(self, path = None, data = None):
-        '''
-        Standard PUT method updating data on the server.
+if __name__ == "__main__":
+    client = Client()
+    # Login
+    # data = {"username":"test", "password": "user"}
 
-        Parameters
-        ----------
-        path: str
-            Endpoint of the server to update data on
-        
-        data: str
-            Updated data
-        '''
-        if path == None:
-            print("No path specified for POST, returning...")
-            return
-        
-        if data == None:
-            print("No data specified for POST, returning...")
-            return
-        
-        if not isinstance(data, str):
-            print("Data in incorrect format, returning...")
-            return
-        
-        self.server.send(bytes(f"{path} PUT {data}", "utf-8"))
+    # Signup
+    # data = {"username: "test", "password": "user"}
+
+    # Friends
+    # data = {"username": "test"}
+
+    # Messages
+    # data = {"sender": "test", "receiver": "other"}
+
+    # Send message
+    # data = {"sender": "test", "receiver": "other", "content": "blabla"}
+
+    # Refer to C server file for further guidelines
+    data = {"sender":"admin", "receiver":"test"}
+    # API endpoint specification
+    client.get("messages", json.dumps(data))

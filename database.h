@@ -16,8 +16,12 @@
 // Get database of specified dbname
 sqlite3 *getDatabase(char dbname[]);
 // Checks if user exists using query
-bool userExists(char dbname[], char query[]);
+bool userExists(char dbname[], char username[]);
+// Authenticate user
+bool authenticate(char dbname[], char username[], char password[]);
 // Create new user using credentials
 bool createUser(char dbname[], char username[], char password[]);
+// Get friends of specified user
+void fetchFriends(char dbname[], char user[], char *response);
 
 #endif

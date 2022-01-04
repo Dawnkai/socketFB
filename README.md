@@ -5,7 +5,7 @@ Server and client uses multi-threading. GUI is written in KivyMD.
 ## Contents
 
 * Makefile - make file for easy compilation
-* client.py - Python client (**without GUI**) responsible for creating connections to server
+* client.py - Python client (**without GUI**) template for connecting to server and testing
 * database.h - Header file with definitions for database managment
 * database.c - Functions used by server to connect to sqlite3 database and fetch data from it
 * parser.h - Header file for server parser
@@ -27,13 +27,28 @@ You can easily compile this project using makefile. Usage depends on how you wis
 1. `sudo apt-get install libsqlite3-dev`
 2. `make build_nosql`
 
+
+> Once you've built the sqlite3 files you can compile server only using `make build` command.
+
 ## Database format
 
-Database needs to be in correct format in order to run. The server will create the database if it doesn't exist on its own, but it will not create the structure for the user (as this is kind of beyond what the server is supposed to do anyway).
+Database needs to be in correct format in order to run. The server will create the database if it doesn't exist on its own, but it will not create the structure for the user (as this is kind of beyond what the server is supposed to do anyway). In order to create or edit database use the following command:
+
+```
+sqlite3 <dbname>
+```
+
+> Commands used to create database are stored in script.sql file.
 
 ### Users
 Users are stored in `users` table. It consists of self-incrementing `id`, `username` and `password`.
 
-### Authors
+### Messages
+Messages are stored in `messages` table. It consists of self-incrementing `id`, `sender` and `receiver`.
+
+### Friends
+Friends are stored in `friends` table. It consists of self-incrementing `id`, `user` and `friend`.
+
+## Authors
 
 * [DawnKai (Maciej Kleban)](https://github.com/Dawnkai/)

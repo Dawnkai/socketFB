@@ -179,3 +179,41 @@ void addMessage(char dbname[], char sender[], char receiver[], char content[]) {
     sqlite3_close(db);
     sqlite3_free(zErrMsg);
 }
+
+
+/*
+    Callback for message fetching SQL statement executions.
+*/
+static int messageCallback(void *data, int argc, char **argv, char **azColName) {
+    char resp[4096] = "";
+    int *client = (int *)data;
+    strcpy(resp, argv[0]);
+    printf("Sending %s\n", resp);
+    send(*client, resp, 4096, 0);
+    return 0;
+}
+
+
+/*
+    Get messages between users and send them directly to the client 
+    bit by bit, until all messages are retrieved.
+*/
+void fetchMessages(char dbname[], char sender[], char receiver[], int client) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char query[100 + strlen(sender) + strlen(receiver)];
+
+    strcpy(query, "SELECT content FROM messages WHERE sender = '");
+    strcat(query, sender);
+    strcat(query, "' AND receiver = '");
+    strcat(query, receiver);
+    strcat(query, "';");
+
+    rc = sqlite3_exec(db, query, messageCallback, &client, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        printf("SQL error while adding message to database: %s\n", zErrMsg);
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+}

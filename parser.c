@@ -110,3 +110,45 @@ struct Message getMessage(char input[]) {
     strcpy(msg.content, tmp);
     return msg;
 }
+
+// Extract receiver and sender from input
+struct Message getParticipants(char input[]) {
+    struct Message msg;
+    char tmp[4096] = "";
+
+    // Skip {"
+    int pos = 2;
+    int i = 0;
+    // Skip sender key
+    while(input[pos] != '"') pos++;
+    // Skip ":"
+    pos = pos + 4;
+    // Read sender
+    while(input[pos] != '"') {
+        tmp[i] = input[pos];
+        pos++;
+        i++;
+    }
+    tmp[i] = '\0';
+    i = 0;
+    // Skip ","
+    pos = pos + 4;
+    strcpy(msg.sender, tmp);
+    strcpy(tmp, "");
+
+    // Skip receiver key
+    while(input[pos] != '"') pos++;
+    // Skip ":"
+    pos = pos + 4;
+    // Read receiver
+    while(input[pos] != '"') {
+        tmp[i] = input[pos];
+        pos++;
+        i++;
+    }
+    tmp[i] = '\0';
+    strcpy(msg.receiver, tmp);
+    strcpy(tmp, "");
+
+    return msg;
+}

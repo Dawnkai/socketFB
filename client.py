@@ -1,4 +1,5 @@
 import socket
+import json
 
 
 class Client:
@@ -28,7 +29,7 @@ class Client:
         self.server.close()
     
 
-    def get(self, path = None):
+    def get(self, path = None, data = None):
         '''
         Standard GET method returning data from server.
 
@@ -46,17 +47,21 @@ class Client:
             print ("No path specified for GET, returning...")
             return
         
-        self.server.send(bytes(f"{path} GET", "utf-8"))
+        if not isinstance(data, str) and data is not None:
+            print("Data in incorrect format, returning...")
+            return
+        
+        self.server.send(bytes(f"{path} GET {data}", "utf-8"))
 
         response = ""
 
-        while True:
-            chunk = self.server.recv(1024)
-            if (len(chunk) <= 0):
-                break
-            response += chunk.decode("utf-8")
+        #while True:
+        #    chunk = self.server.recv(1024)
+        #    if (len(chunk) <= 0):
+        #        break
+        #    response += chunk.decode("utf-8")
 
-        return response
+        #return response
     
 
     def post(self, path = None, data = None):
@@ -111,3 +116,8 @@ class Client:
             return
         
         self.server.send(bytes(f"{path} PUT {data}", "utf-8"))
+
+if __name__ == "__main__":
+    client = Client()
+    data = {"sender":"test", "receiver":"admin", "content":"ha hiya"}
+    client.post("send", json.dumps(data))

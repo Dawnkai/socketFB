@@ -36,7 +36,7 @@ void login(char credentials[], char *response);
 // Creates new account for the user if it doesn't exist.
 void signup(char credentials[], char *response);
 // Fetches friends of client.
-char* getFriends(char params[]);
+void getFriends(char params[], char *response);
 // Gets messages from user to client.
 char* getMessages(char params[]);
 // Sends message from client to another user.

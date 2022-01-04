@@ -23,5 +23,7 @@ struct Credentials getCredentials(char input[]);
 void getUser(char input[], char *output);
 // Extract components of message string
 struct Message getMessage(char input[]);
+// Gets participants of messages to fetch
+struct Message getParticipants(char input[]);
 
 #endif

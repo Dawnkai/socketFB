@@ -23,5 +23,7 @@ bool authenticate(char dbname[], char username[], char password[]);
 bool createUser(char dbname[], char username[], char password[]);
 // Get friends of specified user
 void fetchFriends(char dbname[], char user[], char *response);
+// Add message from sender to receiver to database
+void addMessage(char dbname[], char sender[], char receiver[], char content[]);
 
 #endif

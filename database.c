@@ -152,3 +152,30 @@ void fetchFriends(char dbname[], char user[], char *response) {
     sqlite3_close(db);
     sqlite3_free(zErrMsg);
 }
+
+
+/*
+    Add message to the database from sender to receiver.
+*/
+void addMessage(char dbname[], char sender[], char receiver[], char content[]) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char query[100 + strlen(sender) + strlen(receiver) + strlen(content)];
+
+    strcpy(query, "INSERT INTO messages (sender, receiver, content) VALUES ('");
+    strcat(query, sender);
+    strcat(query, "','");
+    strcat(query, receiver);
+    strcat(query, "','");
+    strcat(query, content);
+    strcat(query, "');");
+
+    rc = sqlite3_exec(db, query, 0, 0, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+        printf("SQL error while adding message to database: %s\n", zErrMsg);
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+}

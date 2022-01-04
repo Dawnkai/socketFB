@@ -47,7 +47,7 @@ Users are stored in `users` table. It consists of self-incrementing `id`, `usern
 Messages are stored in `messages` table. It consists of self-incrementing `id`, `sender` and `receiver`.
 
 ### Friends
-Friends are stored in `friends` table. It consists of self-incrementing `id`, `user` and `friend`.
+Friends are stored in `friends` table. It consists of self-incrementing `id`, `username` and `friend`.
 
 ## Authors
 

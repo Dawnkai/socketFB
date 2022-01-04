@@ -65,15 +65,11 @@ void parseRequest(char request[], char endpoint[], int client) {
     if (strlen(request) < 3) strcpy(response, "401 : Bad Request");
     else if (strstr(request, "GET")) {
         for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
-        response = get(data, endpoint);
+        response = get(data, endpoint, client);
     }
     else if (strstr(request, "POST")) {
         for (i = 5; i < strlen(request); i++) data[i-5] = request[i];
         response = post(data, endpoint);
-    }
-    else if (strstr(request, "PUT")) {
-        for (i = 4; i < strlen(request); i++) data[i-4] = request[i];
-        response = put(data, endpoint);
     }
     else strcpy(response, "401: Incorrect method.");
 
@@ -88,10 +84,10 @@ void parseRequest(char request[], char endpoint[], int client) {
     Processes GET requests by calling required functions
     based on the endpoint the request was sent to.
 */
-char* get(char request[], char endpoint[]) {
+char* get(char request[], char endpoint[], int client) {
     char *response = (char*)malloc(4096);
     if (strcmp(endpoint, "friends") == 0) getFriends(request, response);
-    else if (strcmp(endpoint, "messages") == 0) return getMessages(request);
+    else if (strcmp(endpoint, "messages") == 0) getMessages(request, response, client);
     else strcpy(response, "404: Endpoint doesn't exist.");
     return response;
 }
@@ -108,16 +104,6 @@ char* post(char request[], char endpoint[]) {
     else if (strcmp(endpoint, "signup") == 0) signup(request, response);
     else strcpy(response, "404: Endpoint doesn't exist.");
     return response;
-}
-
-
-/*
-    Processes PUT requests by calling required functions
-    based on the endpoint the request as sent to.
-*/
-char* put(char request[], char endpoint[]) {
-    // TODO: If nothing will require update on server, remove this
-    return "";
 }
 
 
@@ -180,10 +166,23 @@ void getFriends(char params[], char *response) {
 
 /*
     Fetches messages sent from specific user to another user specified
-    in params attribute and returns them.
+    in params attribute and returns them BULK BY BULK. It means that
+    this function will not return one response, but instead will keep sending
+    all messages until all of them are sent!
+    Final message is 200 : Messages received.
+    The reason for this is because messages between users can be very long
+    vastly exceeding 4096 letters limit.
+
+    Params should be in form:
+    {'sender':'user','receiver':'other_user'}
 */
-char* getMessages(char params[]) {
-    return "";
+void getMessages(char params[], char *response, int client) {
+    struct Message participants = getParticipants(params);
+    if (userExists(DBNAME, participants.sender) && userExists(DBNAME, participants.receiver)) {
+        fetchMessages(DBNAME, participants.sender, participants.receiver, client);
+        strcpy(response, "200 : Messages received.");
+    }
+    else strcpy(response, "404 : Users do not exist.");
 }
 
 

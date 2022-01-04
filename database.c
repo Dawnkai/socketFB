@@ -22,12 +22,12 @@ sqlite3 *getDatabase(char dbname[]) {
 
 
 /*
-    Callback for all SQL statement executions.
+    Callback for user fetching SQL statement executions.
 */
 static int userCallback(void *data, int argc, char **argv, char **azColName) {
     // Callback is used when row can be fetched, which means the user exists
-    char **resp = (char **)data;
-    strcpy(*resp, "true");
+    bool *resp = (bool *)data;
+    *resp = true;
     return 0;
 }
 
@@ -35,26 +35,52 @@ static int userCallback(void *data, int argc, char **argv, char **azColName) {
 /*
     Verifies if the user exists in the database
 */
-bool userExists(char dbname[], char query[]) {
+bool userExists(char dbname[], char username[]) {
     sqlite3 *db = getDatabase(dbname);
     char *zErrMsg = 0;
-    char *resp = (char*)malloc(7);
-    strcpy(resp, "false");
     int rc;
     bool exists = false;
+    char query[100 + strlen(username)];
 
-    rc = sqlite3_exec(db, query, userCallback, &resp, &zErrMsg);
+    strcpy(query, "SELECT * FROM users WHERE username = '");
+    strcat(query, username);
+    strcat(query, "';");
+
+    rc = sqlite3_exec(db, query, userCallback, &exists, &zErrMsg);
 
     if( rc != SQLITE_OK ){
         printf("SQL error while checking if user exists: %s\n", zErrMsg);
     }
-    else {
-        if (strcmp(resp, "true") == 0) exists = true;
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+    return exists;
+}
+
+
+/*
+    Authenticate user by comparing his/her username and password to database
+    entries.
+*/
+bool authenticate(char dbname[], char username[], char password[]) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    bool correct = false;
+    int rc;
+    char query[100 + strlen(username) + strlen(password)];
+
+    strcpy(query, "SELECT * FROM users WHERE username = '");
+    strcat(query, username);
+    strcat(query, "' AND password = '");
+    strcat(query, password);
+    strcat(query, "';");
+
+    rc = sqlite3_exec(db, query, userCallback, &correct, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        printf("SQL error while checking if user exists: %s\n", zErrMsg);
     }
     sqlite3_close(db);
     sqlite3_free(zErrMsg);
-    free(resp);
-    return exists;
+    return correct;
 }
 
 
@@ -85,4 +111,44 @@ bool createUser(char dbname[], char username[], char password[]) {
     sqlite3_close(db);
     sqlite3_free(zErrMsg);
     return created;
+}
+
+
+/*
+    Callback for friends fetching SQL statement executions.
+*/
+static int friendCallback(void *data, int argc, char **argv, char **azColName) {
+    char **resp = (char **)data;
+    if (strcmp(*resp, "") == 0) {
+        strcat(*resp, argv[0]);
+    }
+    else {
+        strcat(*resp, ",");
+        strcat(*resp, argv[0]);
+    }
+    return 0;
+}
+
+
+/*
+    Gets friends of specified user from database.
+*/
+void fetchFriends(char dbname[], char user[], char *response) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    strcpy(response, "");
+    char query[100 + strlen(user)];
+
+    strcpy(query, "SELECT friend FROM friends WHERE username = '");
+    strcat(query, user);
+    strcat(query, "';");
+
+    rc = sqlite3_exec(db, query, friendCallback, &response, &zErrMsg);
+
+    if( rc != SQLITE_OK ){
+        printf("SQL error while fetching user's friends: %s\n", zErrMsg);
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
 }

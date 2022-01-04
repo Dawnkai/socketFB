@@ -104,7 +104,7 @@ char* get(char request[], char endpoint[]) {
 char* post(char request[], char endpoint[]) {
     char *response = (char*)malloc(4096);
     if (strcmp(endpoint, "login") == 0) login(request, response);
-    else if (strcmp(endpoint, "send") == 0) sendMessage(request);
+    else if (strcmp(endpoint, "send") == 0) sendMessage(request, response);
     else if (strcmp(endpoint, "signup") == 0) signup(request, response);
     else strcpy(response, "404: Endpoint doesn't exist.");
     return response;
@@ -189,11 +189,15 @@ char* getMessages(char params[]) {
 
 /*
     Sends a message to specific user (if he/she exists).
+
+    Params should be in form:
+    {'sender':'user','receiver':'other_user','content':'something'}
 */
-char* sendMessage(char params[]) {
+void sendMessage(char params[], char *response) {
     struct Message msg = getMessage(params);
     if (userExists(DBNAME, msg.sender) && userExists(DBNAME, msg.receiver)) {
-        printf("Can send data!\n");
+        addMessage(DBNAME, msg.sender, msg.receiver, msg.content);
+        strcpy(response, "200 : Message sent.");
     }
-    return "";
+    else strcpy(response, "403 : Incorrect message.");
 }

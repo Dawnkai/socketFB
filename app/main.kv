@@ -99,11 +99,17 @@ ScreenManager:
         on_press: root.manager.current = 'chat'
         color: 1,0,1,1
         font_size: 12
+    MDTextButton:
+        text: 'add friend'
+        pos_hint: {'center_x':0.5,'center_y':0.2}
+        on_press: root.manager.current = 'add'
+        color: 1,0,1,1
+        font_size: 12
 
 <AddFriendScreen>:
     name: 'add'
     MDLabel:
-        text: 'Add a new firend by username.'
+        text: 'Add a new friend by username.'
         halign: 'center'
         pos_hint: {'center_x':0.5, 'center_y': 0.9}
     MDLabel:

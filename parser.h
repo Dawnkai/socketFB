@@ -17,6 +17,11 @@ struct Message {
     char content[4096];
 };
 
+struct Friend {
+    char username[4096];
+    char friend[4096];
+};
+
 // Extract credentials from input string
 struct Credentials getCredentials(char input[]);
 // Extract username from input string
@@ -25,5 +30,7 @@ void getUser(char input[], char *output);
 struct Message getMessage(char input[]);
 // Gets participants of messages to fetch
 struct Message getParticipants(char input[]);
+// Gets username and friend name from request
+struct Friend getFriend(char input[]);
 
 #endif

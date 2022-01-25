@@ -35,5 +35,9 @@ void fetchFriends(char dbname[], char user[], char *response);
 void addMessage(char dbname[], char sender[], char receiver[], char content[]);
 // Fetch messages between users
 void fetchMessages(char dbname[], char sender[], char receiver[], int client);
+// Create session for user after login
+bool createSession(char dbname[], char username[], int client);
+// Remove session for user after logout
+void removeSession(char dbname[], int client);
 
 #endif

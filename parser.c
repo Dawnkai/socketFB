@@ -152,3 +152,46 @@ struct Message getParticipants(char input[]) {
 
     return msg;
 }
+
+
+// Extract username and friend name from input
+struct Friend getFriend(char input[]) {
+    struct Friend msg;
+    char tmp[4096] = "";
+
+    // Skip {"
+    int pos = 2;
+    int i = 0;
+    // Skip username key
+    while(input[pos] != '"') pos++;
+    // Skip ":"
+    pos = pos + 4;
+    // Read username
+    while(input[pos] != '"') {
+        tmp[i] = input[pos];
+        pos++;
+        i++;
+    }
+    tmp[i] = '\0';
+    i = 0;
+    // Skip ","
+    pos = pos + 4;
+    strcpy(msg.username, tmp);
+    strcpy(tmp, "");
+
+    // Skip friend key
+    while(input[pos] != '"') pos++;
+    // Skip ":"
+    pos = pos + 4;
+    // Read friend
+    while(input[pos] != '"') {
+        tmp[i] = input[pos];
+        pos++;
+        i++;
+    }
+    tmp[i] = '\0';
+    strcpy(msg.friend, tmp);
+    strcpy(tmp, "");
+
+    return msg;
+}

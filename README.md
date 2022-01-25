@@ -49,6 +49,9 @@ Messages are stored in `messages` table. It consists of self-incrementing `id`, 
 ### Friends
 Friends are stored in `friends` table. It consists of self-incrementing `id`, `username` and `friend`.
 
+### Sesssions
+When a user logs in, the server will create a session for him (storing his socket descriptor and username). Similarly when a user logs out, the server will remove their session entry. It consists of `username` and primary key - `fd`, which stores the client file descriptor.
+
 ## Authors
 
 * [DawnKai (Maciej Kleban)](https://github.com/Dawnkai/)

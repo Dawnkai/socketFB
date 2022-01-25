@@ -72,7 +72,7 @@ void parseRequest(char request[], char endpoint[], int client) {
         for (i = 5; i < strlen(request); i++) data[i-5] = request[i];
         response = post(data, endpoint, client);
     }
-    else strcpy(response, "401: Incorrect method.");
+    else strcpy(response, "401 : Incorrect method.");
 
     printf("response is: %s\n", response);
 
@@ -89,7 +89,7 @@ char* get(char request[], char endpoint[], int client) {
     char *response = (char*)malloc(4096);
     if (strcmp(endpoint, "friends") == 0) getFriends(request, response);
     else if (strcmp(endpoint, "messages") == 0) getMessages(request, response, client);
-    else strcpy(response, "404: Endpoint doesn't exist.");
+    else strcpy(response, "404 : Endpoint doesn't exist.");
     return response;
 }
 
@@ -104,7 +104,7 @@ char* post(char request[], char endpoint[], int client) {
     else if (strcmp(endpoint, "send") == 0) sendMessage(request, response);
     else if (strcmp(endpoint, "signup") == 0) signup(request, response);
     else if (strcmp(endpoint, "friends") == 0) addFriend(request, response);
-    else strcpy(response, "404: Endpoint doesn't exist.");
+    else strcpy(response, "404 : Endpoint doesn't exist.");
     return response;
 }
 
@@ -219,5 +219,5 @@ void addFriend(char request[], char *response) {
         createFriend(DBNAME, msg.username, msg.friend);
         strcpy(response, "201 : Friend added.");
     }
-    else strcpy(response, "403: User does not exist.");
+    else strcpy(response, "403 : User does not exist.");
 }

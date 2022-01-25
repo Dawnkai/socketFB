@@ -33,7 +33,7 @@ static int userCallback(void *data, int argc, char **argv, char **azColName) {
 
 
 /*
-    Verifies if the user exists in the database
+    Verifies if the user exists in the database.
 */
 bool userExists(char dbname[], char username[]) {
     sqlite3 *db = getDatabase(dbname);
@@ -213,6 +213,70 @@ void fetchMessages(char dbname[], char sender[], char receiver[], int client) {
     rc = sqlite3_exec(db, query, messageCallback, &client, &zErrMsg);
     if( rc != SQLITE_OK ){
         printf("SQL error while adding message to database: %s\n", zErrMsg);
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+}
+
+
+/*
+    Create session using username and client file descriptor. Since
+    client descriptor is always unique, use it as primary key. After
+    disconnect properly working server will remove the user from the database
+    so it's not a problem.
+*/
+bool createSession(char dbname[], char username[], int client) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char query[100 + strlen(username)];
+    bool created = true;
+    // Max range of int is 10 digits
+    char sClient[10] = "";
+
+    // Convert file descriptor integer into string
+    sprintf(sClient, "%d", client);
+    strcpy(query, "INSERT INTO sessions (username, fd) VALUES ('");
+    strcat(query, username);
+    strcat(query,"',");
+    strcat(query,sClient);
+    strcat(query,");");
+
+    rc = sqlite3_exec(db, query, 0, 0, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        printf("SQL error while adding user session to database: %s\n", zErrMsg);
+        created = false;
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+
+    return created;
+}
+
+
+/*
+    After the user has disconnected from the server, remove his entry from session
+    table, that is his file descriptor and username. Since file descriptor serves
+    as primary key and is always unique - use it instead of filtering usernames
+    which generates the need to store them somehow and waste memory.
+*/
+void removeSession(char dbname[], int client) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char query[100];
+    // Max range of int is 10 digits
+    char sClient[10] = "";
+
+    // Convert file descriptor integer into string
+    sprintf(sClient, "%d", client);
+    strcpy(query, "DELETE FROM sessions WHERE fd = '");
+    strcat(query, sClient);
+    strcat(query, "';");
+
+    rc = sqlite3_exec(db, query, 0, 0, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        printf("SQL error while closing user session to database: %s\n", zErrMsg);
     }
     sqlite3_close(db);
     sqlite3_free(zErrMsg);

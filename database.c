@@ -281,3 +281,27 @@ void removeSession(char dbname[], int client) {
     sqlite3_close(db);
     sqlite3_free(zErrMsg);
 }
+
+
+/*
+    Create new friend in the database by adding username of person requesting
+    the change and username of their friend.
+*/
+void createFriend(char dbname[], char username[], char friend[]) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char query[100];
+    strcpy(query, "INSERT INTO friends (username, friend) VALUES ('");
+    strcat(query, username);
+    strcat(query, "','");
+    strcat(query, friend);
+    strcat(query, "');");
+
+    rc = sqlite3_exec(db, query, 0, 0, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        printf("SQL error while adding new friend to database: %s\n", zErrMsg);
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+}

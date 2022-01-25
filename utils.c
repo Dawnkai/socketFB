@@ -46,6 +46,7 @@ void* handleClient(void *arg) {
         else break;
     }
     printf("Client disconnected! \n");
+    removeSession(DBNAME, client);
     pthread_exit(NULL);
 }
 
@@ -69,7 +70,7 @@ void parseRequest(char request[], char endpoint[], int client) {
     }
     else if (strstr(request, "POST")) {
         for (i = 5; i < strlen(request); i++) data[i-5] = request[i];
-        response = post(data, endpoint);
+        response = post(data, endpoint, client);
     }
     else strcpy(response, "401: Incorrect method.");
 
@@ -97,9 +98,9 @@ char* get(char request[], char endpoint[], int client) {
     Processes POST requests by calling required functions
     based on the endpoint the request as sent to.
 */
-char* post(char request[], char endpoint[]) {
+char* post(char request[], char endpoint[], int client) {
     char *response = (char*)malloc(4096);
-    if (strcmp(endpoint, "login") == 0) login(request, response);
+    if (strcmp(endpoint, "login") == 0) login(request, response, client);
     else if (strcmp(endpoint, "send") == 0) sendMessage(request, response);
     else if (strcmp(endpoint, "signup") == 0) signup(request, response);
     else strcpy(response, "404: Endpoint doesn't exist.");
@@ -115,10 +116,13 @@ char* post(char request[], char endpoint[]) {
     Credentials should be in form:
     {'username':'user','password':'pass'}
 */
-void login(char credentials[], char *response) {
+void login(char credentials[], char *response, int client) {
     struct Credentials res = getCredentials(credentials);
     if (authenticate(DBNAME, res.username, res.password)) {
-        strcpy(response, "200 : Logged in.");
+        if (createSession(DBNAME, res.username, client)) {
+            strcpy(response, "200 : Logged in.");
+        }
+        else strcpy(response, "500 : Internal server error.");
     }
     else strcpy(response, "403 : Credentials incorrect.");
 }

@@ -6,7 +6,7 @@
 #include "parser.h"
 #include "database.h"
 
-#define DBNAME "data.db"
+#define DBNAME "sk2"
 
 
 // Handles new client connection.

@@ -120,10 +120,10 @@ char* post(char request[], char endpoint[], int client) {
 void login(char credentials[], char *response, int client) {
     struct Credentials res = getCredentials(credentials);
     if (authenticate(DBNAME, res.username, res.password)) {
-        if (createSession(DBNAME, res.username, client)) {
+        if (!sessionExists(DBNAME, res.username) && createSession(DBNAME, res.username, client)) {
             strcpy(response, "200 : Logged in.");
         }
-        else strcpy(response, "500 : Internal server error.");
+        else strcpy(response, "403 : User already logged in.");
     }
     else strcpy(response, "403 : Credentials incorrect.");
 }

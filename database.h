@@ -41,5 +41,9 @@ bool createSession(char dbname[], char username[], int client);
 void removeSession(char dbname[], int client);
 // Add new friend to database
 void createFriend(char dbname[], char username[], char friend[]);
+// Check if user is already logged in
+bool sessionExists(char dbname[], char username[]);
+// Check if user is already a friend
+bool friendExists(char dbname[], char username[], char friend[]);
 
 #endif

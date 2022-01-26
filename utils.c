@@ -216,8 +216,12 @@ void sendMessage(char params[], char *response) {
 void addFriend(char request[], char *response) {
     struct Friend msg = getFriend(request);
     if (userExists(DBNAME, msg.username) && userExists(DBNAME, msg.friend)) {
-        createFriend(DBNAME, msg.username, msg.friend);
-        strcpy(response, "201 : Friend added.");
+        if (friendExists(DBNAME, msg.username, msg.friend)){
+            strcpy(response, "401 : Friend already added.");
+        }else {
+            createFriend(DBNAME, msg.username, msg.friend);
+            strcpy(response, "201 : Friend added.");
+        }
     }
     else strcpy(response, "403 : User does not exist.");
 }

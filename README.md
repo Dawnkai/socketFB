@@ -5,7 +5,8 @@ Server and client uses multi-threading. GUI is written in KivyMD.
 ## Contents
 
 * Makefile - make file for easy compilation
-* client.py - Python client (**without GUI**) template for connecting to server and testing
+* app/main.py - Python client connecting to server
+* app/main.kv - template file for KivyMD
 * database.h - Header file with definitions for database managment
 * database.c - Functions used by server to connect to sqlite3 database and fetch data from it
 * parser.h - Header file for server parser
@@ -55,3 +56,4 @@ When a user logs in, the server will create a session for him (storing his socke
 ## Authors
 
 * [DawnKai (Maciej Kleban)](https://github.com/Dawnkai/)
+* [MatChmielewski (Mateusz Chmielewski)](https://github.com/MatChmielewski)

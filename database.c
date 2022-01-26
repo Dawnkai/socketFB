@@ -137,7 +137,7 @@ void fetchFriends(char dbname[], char user[], char *response) {
     sqlite3 *db = getDatabase(dbname);
     char *zErrMsg = 0;
     int rc;
-    strcpy(response, "");
+    strcpy(response, "x");
     char query[100 + strlen(user)];
 
     strcpy(query, "SELECT friend FROM friends WHERE username = '");
@@ -305,3 +305,32 @@ void createFriend(char dbname[], char username[], char friend[]) {
     sqlite3_close(db);
     sqlite3_free(zErrMsg);
 }
+
+static int sessionCallback(void *data, int argc, char **argv, char **azColName) {
+    // Callback is used when row can be fetched, which means the user exists
+    bool *resp = (bool *)data;
+    *resp = true;
+    return 0;
+}
+
+bool sessionExists(char dbname[], char username[]) {
+    sqlite3 *db = getDatabase(dbname);
+    char *zErrMsg = 0;
+    int rc;
+    char query[100 + strlen(username)];
+    bool exists = false;
+    strcpy(query, "SELECT * FROM sessions WHERE username = '");
+    strcat(query, username);
+    strcat(query, "';");
+
+    rc = sqlite3_exec(db, query, sessionCallback, &exists, &zErrMsg);
+    if( rc != SQLITE_OK ){
+        printf("SQL error while adding new friend to database: %s\n", zErrMsg);
+    }
+    sqlite3_close(db);
+    sqlite3_free(zErrMsg);
+
+    return exists;
+}
+
+

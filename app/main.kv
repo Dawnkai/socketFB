@@ -1,4 +1,10 @@
 #:kivy 2.0
+# Main .kv file
+#
+# Almost all GUI elements are defined and described here.
+# App consists mainly of KivyMD (See: Material Design) elements,
+# which generally look nicer than standalone Kivy ones. 
+
 ScreenManager:
     LoginScreen:
     RegisterScreen:
@@ -8,20 +14,23 @@ ScreenManager:
 
 <LoginScreen>:
     name: 'login'
+
     MDLabel:
         id: log_info
         text: ""
         size_hint_x: None
-        pos_hint: {'center_x': 0.5, 'center_y': 0.75}
+        pos_hint: {'center_x': 0.5, 'center_y': 0.8}
         halign: 'center'
         color: (1,0,0)
         width: 150
+
     MDTextField:
         id: user
         hint_text: "username"
         size_hint_x: None
         pos_hint: {'center_x': 0.5, 'center_y': 0.7}
         width: 150
+
     MDTextField:
         id: passwd
         hint_text: "password"
@@ -29,38 +38,44 @@ ScreenManager:
         pos_hint: {'center_x': 0.5, 'center_y': 0.6}
         width: 150
         password: True
+
     MDRectangleFlatButton:
         text: 'Log In'
         pos_hint: {'center_x':0.5,'center_y':0.5}
         on_press: root.login()
+
     MDTextButton:
         text: 'Create account'
         pos_hint: {'center_x':0.5,'center_y':0.4}
         on_press: root.manager.current = 'register'
         font_size: 12
+
     MDTextButton:
         text: 'Admin_test'
         pos_hint: {'center_x':0.5,'center_y':0.3}
-        on_press: root.admin_test()
+        on_press: root.testing()
         color: 1,0,1,1
         font_size: 12
 
 <RegisterScreen>:
     name: 'register'
+
     MDLabel:
         id: reg_info
-        text: "asd"
+        text: ""
         size_hint_x: None
         pos_hint: {'center_x': 0.5, 'center_y': 0.8}
         halign: 'center'
         color: (0,1,0,0.7)
         width: 150
+
     MDTextField:
         id: ruser
         hint_text: "new username"
         size_hint_x: None
         pos_hint: {'center_x': 0.5, 'center_y': 0.7}
         width: 150
+
     MDTextField:
         id: rpasswd
         hint_text: "new password"
@@ -68,42 +83,77 @@ ScreenManager:
         pos_hint: {'center_x': 0.5, 'center_y': 0.6}
         width: 150
         password: True
+
     MDRectangleFlatButton:
         text: 'Register now'
         pos_hint: {'center_x':0.5,'center_y':0.5}
         on_press: root.register()
+
     MDTextButton:
         text: 'Go back'
         pos_hint: {'center_x':0.5,'center_y':0.4}
         on_press: root.manager.current = 'login'
-        font_size: 12
-    MDTextButton:
-        text: 'Admin_test'
-        pos_hint: {'center_x':0.5,'center_y':0.3}
-        on_press: root.admin_test()
-        color: 1,0,1,1
         font_size: 12
     
     
 <ProfileScreen>:
     name: 'profile'
 
+    MDCard:
+       
+        size_hint: 0.9, 0.6
+        pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+        Screen:
+            ScrollView:
+                id: scroll
+                CodeInput:
+                    id: fr_chat_field
+                    size_hint: 1, None
+                    text: ''
+                    height: max(self.minimum_height, scroll.height)
+
     MDDropDownItem:
         id: drop_item
-        pos_hint: {'center_x': .5, 'center_y': .5}
-        text: 'Item 0'
+        ver_growth: 'down'
+        hor_growth: 'right'
+        size: 150, 30
+        pos_hint: {'center_x': .2, 'center_y': .93}
+        text: '<friend>'
         on_release: root.menu.open()
+
+    MDLabel:
+        id: fr_chat_info
+        text: ''
+        halign: 'center'
+        pos_hint: {'center_x':0.5, 'center_y': 0.7}
+        color: (1,0,0)   
+    
+    MDIconButton:
+        icon: 'refresh-circle'
+        pos_hint: {'center_x':0.9,'center_y':0.93}
+        on_press: root.getMessage()
+        font_size: 12
+
+    MDTextField:
+        id: fr_chat_msg
+        hint_text: "Type here..."
+        size_hint_x: 0.65
+        pos_hint: {'center_x': 0.4, 'center_y': 0.2}
+        
+    MDRectangleFlatButton:
+        text: 'Send'
+        pos_hint: {'center_x':0.85,'center_y':0.2}
+        on_press: root.sendMessage()
+
     MDTextButton:
-        text: 'send message'
-        pos_hint: {'center_x':0.5,'center_y':0.1}
+        text: 'direct message'
+        pos_hint: {'center_x':0.75,'center_y':0.08}
         on_press: root.manager.current = 'chat'
-        color: 1,0,1,1
         font_size: 12
     MDTextButton:
         text: 'add friend'
-        pos_hint: {'center_x':0.5,'center_y':0.2}
+        pos_hint: {'center_x':0.25,'center_y':0.08}
         on_press: root.manager.current = 'add'
-        color: 1,0,1,1
         font_size: 12
 
 <AddFriendScreen>:
@@ -111,26 +161,30 @@ ScreenManager:
     MDLabel:
         text: 'Add a new friend by username.'
         halign: 'center'
-        pos_hint: {'center_x':0.5, 'center_y': 0.9}
+        pos_hint: {'center_x':0.5, 'center_y': 0.7}
+
     MDLabel:
         id: add_info
         text: ''
         halign: 'center'
-        pos_hint: {'center_x':0.5, 'center_y': 0.8}
+        pos_hint: {'center_x':0.5, 'center_y': 0.6}
         color: (0,1,0,0.7)
+
     MDTextField:
         id: fname
         hint_text: "friend username"
         size_hint_x: None
-        pos_hint: {'center_x': 0.5, 'center_y': 0.7}
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
         width: 150
+
     MDRectangleFlatButton:
         text: 'Add friend'
-        pos_hint: {'center_x':0.5,'center_y':0.5}
+        pos_hint: {'center_x':0.5,'center_y':0.3}
         on_press: root.addFriend()
+
     MDTextButton:
         text: 'Go back'
-        pos_hint: {'center_x':0.5,'center_y':0.4}
+        pos_hint: {'center_x':0.5,'center_y':0.08}
         on_press: root.manager.current = 'profile'
         font_size: 12
        
@@ -142,38 +196,44 @@ ScreenManager:
         halign: 'center'
         pos_hint: {'center_x':0.5, 'center_y': 0.7}
         color: (1,0,0)
-    ScrollView:
-        MDLabel:
-            padding: 10, 10
-            id: chat_field
-            font_size: 12
-            halign: 'left'
-            size_hint: None, None
-            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+    MDCard:
+        size_hint: 0.9, 0.6
+        pos_hint: {'center_x': 0.5, 'center_y': 0.6}
+        Screen:
+            ScrollView:
+                id: ch_scroll
+                CodeInput:
+                    id: chat_field
+                    size_hint: 1, None
+                    text: ''
+                    height: max(self.minimum_height, ch_scroll.height)
+
     MDTextField:
         id: send_to
         hint_text: "text to..."
-        size_hint_x: None
-        pos_hint: {'center_x': 0.3, 'center_y': 0.3}
-        width: 150
+        size_hint_x: 0.5
+        pos_hint: {'center_x': 0.3, 'center_y': 0.93}
     
     MDTextField:
         id: chat_msg
         hint_text: "Type here..."
-        size_hint_x: None
-        pos_hint: {'center_x': 0.35, 'center_y': 0.2}
-        width: 180
+        size_hint_x: 0.65
+        pos_hint: {'center_x': 0.4, 'center_y': 0.2}
+        
     MDRectangleFlatButton:
         text: 'Send'
         pos_hint: {'center_x':0.85,'center_y':0.2}
         on_press: root.sendMessage()
-    MDTextButton:
-        text: 'Refresh'
-        pos_hint: {'center_x':0.9,'center_y':0.3}
+
+    MDIconButton:
+        icon: 'refresh-circle'
+        pos_hint: {'center_x':0.9,'center_y':0.93}
         on_press: root.getMessage()
         font_size: 12
+
     MDTextButton:
         text: 'Go back'
-        pos_hint: {'center_x':0.5,'center_y':0.1}
+        pos_hint: {'center_x':0.5,'center_y':0.08}
         on_press: root.manager.current = 'profile'
         font_size: 12
